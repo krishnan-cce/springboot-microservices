@@ -1,16 +1,16 @@
-package com.ms.accounts.dto;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import java.util.List;
-import java.util.Map;
+package com.ms.cards.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "accounts")
+import java.util.List;
+import java.util.Map;
+
+@ConfigurationProperties(prefix = "cards")
 @Getter
 @Setter
-public class AccountsContactInfoDto {
+public class CardsContactInfoDto {
 
     private String message;
     private Map<String, String> contactDetails;
