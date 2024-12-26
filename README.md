@@ -74,7 +74,7 @@ docker compose down
 ## docker image push docker.io/thrilokh/cards:s6
 ## docker image push docker.io/thrilokh/configserver:s6
 ## docker image push docker.io/thrilokh/loans:s6
-
+## docker image push docker.io/thrilokh/eurekaserver:s6
 
 ## Create mysql image using:
 
@@ -86,3 +86,13 @@ docker compose down
 
 ## manual docker file: 
 ## docker build --platform linux/arm64 -t thrilokh/accounts:s6 .
+
+## ports used
+## 8080 for Accounts
+## 8090 for Loans
+## 9000 for Cards
+## 8071 for Config Server
+## 8070 for Eureka Server
+## 3306 for mysql database Accounts
+## 3307 for mysql database Loans
+## 3308 for mysql database Cards
