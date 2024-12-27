@@ -133,6 +133,24 @@ services:
       file: common-config.yml
       service: microservice-eureka-config
 
+  gatewayserver:
+    image: "eazybytes/gatewayserver:s9"
+    container_name: gatewayserver-ms
+    ports:
+      - "8072:8072"
+    depends_on:
+      accounts:
+        condition: service_healthy
+      loans:
+        condition: service_healthy
+      cards:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: "gatewayserver"
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
 networks:
   eazybank:
     driver: "bridge"
