@@ -23,7 +23,8 @@ public class SecurityConfig {
         serverHttpSecurity
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/eazybank/users/register", "/eazybank/users/login").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/eazybank/users/**").permitAll()
                         .pathMatchers("/eazybank/accounts/**").hasRole("ACCOUNTS")
                         .pathMatchers("/eazybank/cards/**").hasRole("CARDS")
                         .pathMatchers("/eazybank/loans/**").hasRole("LOANS")

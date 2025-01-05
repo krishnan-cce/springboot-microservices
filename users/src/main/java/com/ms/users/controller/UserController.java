@@ -1,6 +1,5 @@
 package com.ms.users.controller;
 
-// UserController.java
 import com.ms.users.dto.LoginRequest;
 import com.ms.users.dto.LoginResponse;
 import com.ms.users.dto.UserRegistrationRequest;
@@ -12,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,16 +19,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
-@RequiredArgsConstructor
+@RequestMapping("/api")
 @Slf4j
 public class UserController {
+
+    private final UserService userService;
+    private final Keycloak keycloakAdmin;
+
+    public UserController(UserService userService, Keycloak keycloakAdmin) {
+        this.userService = userService;
+        this.keycloakAdmin = keycloakAdmin;
+    }
 
     @Value("${keycloak.realm}")
     private String realm;
 
-    private final UserService userService;
-    private final Keycloak keycloakAdmin;
+    @Value("${build.version}")
+    private String buildVersion;
+
 
     @PostMapping("/register")
     @PreAuthorize("permitAll()")
@@ -74,17 +82,13 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/test-keycloak")
+
+    @GetMapping("/build-info")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<String> testKeycloak() {
-        try {
-            // Try to list users as a basic connectivity test
-            List<UserRepresentation> users = keycloakAdmin.realm(realm).users().list();
-            return ResponseEntity.ok("Keycloak connection successful. Found " + users.size() + " users");
-        } catch (Exception e) {
-            log.error("Keycloak connection test failed", e);
-            return ResponseEntity.status(500)
-                    .body("Keycloak connection failed: " + e.getMessage());
-        }
+    public ResponseEntity<String> getBuildInfo() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(buildVersion);
     }
+
 }

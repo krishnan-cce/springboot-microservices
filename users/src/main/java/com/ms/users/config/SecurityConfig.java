@@ -29,8 +29,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .requestMatchers("/api/users/admin/**").hasRole("USER_ADMIN")
+                        .requestMatchers("/api/register", "/api/login").permitAll()
+                        .requestMatchers("/api/build-info").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("USER_ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -150,18 +150,20 @@ services:
   users:
     image: "thrilokh/users:s6"
     container_name: users-ms
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "9090:9090"
     environment:
       SPRING_APPLICATION_NAME: "users"
       SPRING_DATASOURCE_URL: "jdbc:mysql://usersdb:3306/usersdb"
-      KEYCLOAK_AUTH_SERVER_URL: "http://localhost:7080"  # Changed to localhost since Keycloak is external
+      KEYCLOAK_AUTH_SERVER_URL: "http://host.docker.internal:7080"
       KEYCLOAK_REALM: "master"
       KEYCLOAK_RESOURCE: "users-service-client"
       KEYCLOAK_CREDENTIALS_SECRET: "szmCOx4BJdzMjvEbOOr2pmfXkSYPheQO"
       KEYCLOAK_PUBLIC_CLIENT: "false"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI: "http://localhost:7080/realms/master"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: "http://localhost:7080/realms/master/protocol/openid-connect/certs"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI: "http://host.docker.internal:7080/realms/master"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: "http://host.docker.internal:7080/realms/master/protocol/openid-connect/certs"
     depends_on:
       usersdb:
         condition: service_healthy

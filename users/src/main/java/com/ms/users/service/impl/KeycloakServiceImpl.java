@@ -4,11 +4,13 @@ import com.ms.users.dto.LoginRequest;
 import com.ms.users.dto.LoginResponse;
 import com.ms.users.dto.UserRegistrationRequest;
 import com.ms.users.entity.UserProfile;
+import com.ms.users.exception.UserAlreadyExistsException;
 import com.ms.users.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.RoleResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -48,6 +50,16 @@ public class KeycloakServiceImpl implements KeycloakService {
         log.debug("Attempting to create user in Keycloak with username: {}", request.getUsername());
 
         try {
+            // First check if user exists
+            RealmResource realmResource = keycloakAdmin.realm(realm);
+            List<UserRepresentation> existingUsers = realmResource.users()
+                    .searchByEmail(request.getEmail(), true);
+
+            if (!existingUsers.isEmpty()) {
+                throw new UserAlreadyExistsException("Email already registered");
+            }
+
+            // Create user representation
             UserRepresentation user = new UserRepresentation();
             user.setUsername(request.getUsername());
             user.setEmail(request.getEmail());
@@ -67,12 +79,14 @@ public class KeycloakServiceImpl implements KeycloakService {
             Response response = keycloakAdmin.realm(realm).users().create(user);
             log.info("Keycloak create user response status: {}", response.getStatus());
 
+            if (response.getStatus() == 409) {
+                throw new UserAlreadyExistsException("User with this email or username already exists");
+            }
+
             if (response.getStatus() != 201) {
                 String responseBody = response.readEntity(String.class);
-                log.error("Failed to create user in Keycloak. Status: {}, Body: {}",
-                        response.getStatus(), responseBody);
-                throw new RuntimeException("Failed to create user in Keycloak. Status: " +
-                        response.getStatus() + ", Body: " + responseBody);
+                log.error("Failed to create user in Keycloak. Status: {}, Body: {}", response.getStatus(), responseBody);
+                throw new RuntimeException("Failed to create user in Keycloak. Status: " + response.getStatus());
             }
 
             String userId = CreatedResponseUtil.getCreatedId(response);
@@ -80,17 +94,14 @@ public class KeycloakServiceImpl implements KeycloakService {
 
             // Assign roles if provided
             if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-                try {
-                    assignRoles(userId, request.getRoles());
-                } catch (Exception e) {
-                    log.error("Failed to assign roles to user {}", userId, e);
-                    // Optionally delete the user if role assignment fails
-                    keycloakAdmin.realm(realm).users().delete(userId);
-                    throw new RuntimeException("Failed to assign roles to user", e);
-                }
+                assignRoles(userId, request.getRoles());
             }
 
             return userId;
+
+        } catch (UserAlreadyExistsException e) {
+            log.warn("User already exists: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Error creating user in Keycloak", e);
             throw new RuntimeException("Failed to create user in Keycloak", e);
