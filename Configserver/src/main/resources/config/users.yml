@@ -1,0 +1,11 @@
+build:
+  version: "3.0"
+
+users:
+  message: "Welcome to EazyBank user management related APIs"
+  contactDetails:
+    name: "User Management Team"
+    email: "users@eazybank.com"
+  onCallSupport:
+    - (555) 555-1234
+    - (555) 523-1345

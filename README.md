@@ -75,18 +75,18 @@ docker compose down
 ## docker image push docker.io/thrilokh/configserver:s6
 ## docker image push docker.io/thrilokh/loans:s6
 ## docker image push docker.io/thrilokh/eurekaserver:s6
+## docker image push docker.io/thrilokh/users:s6
+## docker image push docker.io/thrilokh/gatewayserver:s6
 
 ## Create mysql image using:
 
+## docker run -p 3309:3306 --name usersdb -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=usersdb -d mysql
 ## docker run -p 3306:3306 --name accountsdb -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=accountsdb -d mysql
 ## docker run -p 3307:3306 --name loansdb -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=loansdb -d mysql
 ## docker run -p 3308:3306 --name cardsdb -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=cardsdb -d mysql
 
 
-
-## manual docker file: 
-## docker build --platform linux/arm64 -t thrilokh/accounts:s6 .
-
+ 
 ## ports used
 ## 8080 for Accounts
 ## 8090 for Loans
@@ -96,3 +96,5 @@ docker compose down
 ## 3306 for mysql database Accounts
 ## 3307 for mysql database Loans
 ## 3308 for mysql database Cards
+
+## docker run -d -p 7080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:26.0.7 start-dev
