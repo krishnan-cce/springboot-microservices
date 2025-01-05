@@ -4,15 +4,18 @@ import com.ms.users.dto.LoginRequest;
 import com.ms.users.dto.LoginResponse;
 import com.ms.users.dto.UserRegistrationRequest;
 import com.ms.users.entity.UserProfile;
+import com.ms.users.exception.CustomAuthenticationException;
 import com.ms.users.exception.UserAlreadyExistsException;
 import com.ms.users.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.RoleResource;
 import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -110,29 +113,36 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public LoginResponse authenticate(LoginRequest request) {
-        try {
-            // Create a new Keycloak instance for user authentication
-            Keycloak keycloakUser = KeycloakBuilder.builder()
-                    .serverUrl(authServerUrl)
-                    .realm(realm)
-                    .clientId(clientId)
-                    .clientSecret(clientSecret)
-                    .username(request.getUsername())
-                    .password(request.getPassword())
-                    .build();
+        try (Keycloak keycloakUser = KeycloakBuilder.builder()
+                .serverUrl(authServerUrl)
+                .realm(realm)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
+                .username(request.getUsername())
+                .password(request.getPassword())
+                .grantType(OAuth2Constants.PASSWORD)
+                .build()) {
 
             // Get the token
-            String accessToken = keycloakUser.tokenManager().getAccessToken().getToken();
-            String refreshToken = keycloakUser.tokenManager().getAccessToken().getRefreshToken();
-            Long expiresIn = keycloakUser.tokenManager().getAccessToken().getExpiresIn();
+            AccessTokenResponse tokenResponse = keycloakUser.tokenManager().getAccessToken();
+
+            // Find user in Keycloak to get ID
+            UserRepresentation userRepresentation = keycloakAdmin.realm(realm)
+                    .users()
+                    .searchByUsername(request.getUsername(), true)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new CustomAuthenticationException("User not found in Keycloak"));
 
             return LoginResponse.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .expiresIn(expiresIn)
+                    .accessToken(tokenResponse.getToken())
+                    .refreshToken(tokenResponse.getRefreshToken())
+                    .expiresIn(tokenResponse.getExpiresIn())
+                    .keycloakId(userRepresentation.getId())
                     .build();
         } catch (Exception e) {
-            throw new AuthenticationException("Invalid credentials") {};
+            log.error("Authentication failed", e);
+            throw new CustomAuthenticationException("Invalid credentials", e);
         }
     }
 

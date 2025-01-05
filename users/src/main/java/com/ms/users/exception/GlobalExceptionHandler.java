@@ -35,9 +35,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         ErrorResponse error = new ErrorResponse(
                 "AUTHENTICATION_FAILED",
-                ex.getMessage()
+                ex.getMessage() != null ? ex.getMessage() : "Authentication failed"
         );
-        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(CustomAuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(CustomAuthenticationException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "AUTHENTICATION_FAILED",
+                ex.getMessage() != null ? ex.getMessage() : "Authentication failed"
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -83,5 +92,6 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
+
 
 }
